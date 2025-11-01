@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Hand → Green Screen (single-file)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; display:flex; gap:12px; align-items:flex-start;
+           padding:18px; background:linear-gradient(135deg,#0b1020,#0b1a2b); color:#e6f0ff; }
+    .panel { background:rgba(255,255,255,0.03); padding:12px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.5); }
+    canvas { max-width:640px; width:640px; height:480px; border-radius:8px; display:block; }
+    video { display:none; } /* hidden video input */
+    button { padding:8px 12px; border-radius:8px; border:none; background:#1f8b4c; color:white; cursor:pointer; }
+    label { display:block; margin-top:8px; font-size:13px; color:#cfeef0; }
+    input[type=range]{width:220px}
+    small { color:#9fc9c6 }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h3>Hand → Green Screen</h3>
+    <p><small>Allow camera access. When a hand is detected it will be filled with green. Works locally in-browser.</small></p>
+
+    <div>
+      <button id="startBtn">Start Camera</button>
+      <button id="stopBtn" disabled>Stop</button>
+    </div>
+
+    <label>Mask blur (smoothness): <span id="blurVal">8</span> px
+      <input id="blurRange" type="range" min="0" max="24" value="8" />
+    </label>
+
+    <label>Mask radius multiplier: <span id="radVal">1.25</span>
+      <input id="radRange" type="range" min="0.6" max="2.0" step="0.05" value="1.25" />
+    </label>
+
+    <p><small>Tip: point your hand clearly to the camera. Background must be reasonably lit.</small></p>
+  </div>
+
+  <div class="panel">
+    <canvas id="outputCanvas" width="640" height="480"></canvas>
+    <video id="inputVideo" autoplay playsinline></video>
+  </div>
+
+  <!-- MediaPipe Hands and utils -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+  <script>
+  // Elements
+  const video = document.getElementById('inputVideo');
+  const outCanvas = document.getElementById('outputCanvas');
+  const outCtx = outCanvas.getContext('2d');
+
+  // Offscreen canvases for mask + overlay
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = outCanvas.width; maskCanvas.height = outCanvas.height;
+  const maskCtx = maskCanvas.getContext('2d');
+
+  const overlayCanvas = document.createElement('canvas');
+  overlayCanvas.width = outCanvas.width; overlayCanvas.height = outCanvas.height;
+  const overlayCtx = overlayCanvas.getContext('2d');
+
+  // Controls
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const blurRange = document.getElementById('blurRange');
+  const radRange = document.getElementById('radRange');
+  const blurVal = document.getElementById('blurVal');
+  const radVal = document.getElementById('radVal');
+
+  blurRange.oninput = () => blurVal.textContent = blurRange.value;
+  radRange.oninput = () => radVal.textContent = radRange.value;
+
+  let camera = null;
+  let running = false;
+
+  // Create MediaPipe Hands
+  const hands = new Hands({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+  });
+
+  hands.setOptions({
+    maxNumHands: 2,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.6,
+    minTrackingConfidence: 0.6
+  });
+
+  hands.onResults(onHandsResults);
+
+  async function startCamera() {
+    if (running) return;
+    running = true;
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+
+    // request camera with ideal resolution matching canvas
+    camera = new Camera(video, {
+      onFrame: async () => {
+        await hands.send({image: video});
+      },
+      width: outCanvas.width,
+      height: outCanvas.height,
+      facingMode: "user"
+    });
+    camera.start();
+  }
+
+  function stopCamera() {
+    if (!running) return;
+    running = false;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    if (camera) camera.stop();
+    // clear canvas
+    outCtx.clearRect(0,0,outCanvas.width,outCanvas.height);
+    maskCtx.clearRect(0,0,maskCanvas.width,maskCanvas.height);
+    overlayCtx.clearRect(0,0,overlayCanvas.width,overlayCanvas.height);
+  }
+
+  startBtn.addEventListener('click', startCamera);
+  stopBtn.addEventListener('click', stopCamera);
+
+  // When hands model returns results
+  function onHandsResults(results) {
+    // draw original video frame to output
+    outCtx.save();
+    outCtx.clearRect(0,0,outCanvas.width,outCanvas.height);
+    outCtx.drawImage(video, 0, 0, outCanvas.width, outCanvas.height);
+    outCtx.restore();
+
+    // Clear mask
+    maskCtx.clearRect(0,0,maskCanvas.width,maskCanvas.height);
+    maskCtx.fillStyle = 'white';
+    maskCtx.globalCompositeOperation = 'source-over';
+
+    // For each detected hand, draw soft blobs at landmarks to create a mask
+    (results.multiHandLandmarks || []).forEach(landmarks => {
+      // compute approximate hand size from bbox of landmarks
+      let minX=1,minY=1,maxX=0,maxY=0;
+      landmarks.forEach(p => {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+      });
+      const bboxW = (maxX - minX) * maskCanvas.width;
+      const bboxH = (maxY - minY) * maskCanvas.height;
+      const baseRadius = Math.max(bboxW, bboxH) * 0.06 * parseFloat(radRange.value); // tweakable
+
+      // Draw filled circles at each landmark (this forms a rough mask)
+      landmarks.forEach(p => {
+        const x = p.x * maskCanvas.width;
+        const y = p.y * maskCanvas.height;
+        // radius slightly varies by landmark index for a more natural shape
+        const r = baseRadius * (0.75 + (Math.sin(p.z*10 || 0) + 1)/4);
+        maskCtx.beginPath();
+        maskCtx.arc(x, y, r, 0, Math.PI * 2);
+        maskCtx.fill();
+      });
+
+      // fill convex-like hull by connecting outer landmarks (wrist + finger tips)
+      // use a simple polygon roughly around the hand: choose landmarks indices known to be outer points
+      const polyIndices = [0,5,9,13,17,20,16,12,8,4]; // a reasonable hand loop
+      maskCtx.beginPath();
+      for (let i=0;i<polyIndices.length;i++){
+        const idx = polyIndices[i];
+        const p = landmarks[idx];
+        const x = p.x * maskCanvas.width;
+        const y = p.y * maskCanvas.height;
+        if (i===0) maskCtx.moveTo(x,y); else maskCtx.lineTo(x,y);
+      }
+      maskCtx.closePath();
+      maskCtx.fill();
+    });
+
+    // apply blur to mask to smooth edges (via CSS filter on the offscreen canvas)
+    // We emulate blur by drawing mask to overlay with filter, because canvas blur requires ctx.filter
+    overlayCtx.clearRect(0,0,overlayCanvas.width,overlayCanvas.height);
+    overlayCtx.save();
+    overlayCtx.filter = `blur(${blurRange.value}px)`;
+    overlayCtx.drawImage(maskCanvas, 0, 0);
+    overlayCtx.restore();
+
+    // Create green overlay constrained to mask
+    // 1) Make overlay full-green
+    overlayCtx.save();
+    overlayCtx.globalCompositeOperation = 'source-over';
+    overlayCtx.fillStyle = 'rgba(0,200,0,1)'; // bright green
+    overlayCtx.fillRect(0,0,overlayCanvas.width,overlayCanvas.height);
+
+    // 2) Keep green only where mask exists: destination-in with the blurred mask
+    overlayCtx.globalCompositeOperation = 'destination-in';
+    overlayCtx.drawImage(maskCanvas, 0, 0); // using non-blurred mask keeps sharper interior; feel free to use overlayCanvas instead
+    overlayCtx.restore();
+
+    // Finally, draw the green overlay on top of the original video
+    outCtx.drawImage(overlayCanvas, 0, 0);
+  }
+
+  // Stop camera when page hidden to save resources
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (camera) camera.stop();
+    } else {
+      // if previously running, restart camera
+      if (running && camera) camera.start();
+    }
+  });
+  </script>
+</body>
+</html>
