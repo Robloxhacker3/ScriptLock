@@ -1,213 +1,288 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Hand → Green Screen (single-file)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body { font-family: Inter, system-ui, sans-serif; display:flex; gap:12px; align-items:flex-start;
-           padding:18px; background:linear-gradient(135deg,#0b1020,#0b1a2b); color:#e6f0ff; }
-    .panel { background:rgba(255,255,255,0.03); padding:12px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.5); }
-    canvas { max-width:640px; width:640px; height:480px; border-radius:8px; display:block; }
-    video { display:none; } /* hidden video input */
-    button { padding:8px 12px; border-radius:8px; border:none; background:#1f8b4c; color:white; cursor:pointer; }
-    label { display:block; margin-top:8px; font-size:13px; color:#cfeef0; }
-    input[type=range]{width:220px}
-    small { color:#9fc9c6 }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Roblox Scripts Gallery</title>
+<style>
+  :root{
+    --bg:#071228; --card:#0e1620; --muted:#9aa4b2; --accent:#6ee7b7;
+  }
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#04111a,#071228);color:#e6eef6}
+  .wrap{max-width:1100px;margin:20px auto;padding:16px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{margin:0;font-size:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:14px}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);box-shadow:0 8px 24px rgba(0,0,0,0.6)}
+  .thumb{height:130px;border-radius:8px;background-size:cover;background-position:center}
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .title{font-weight:700}
+  .desc{font-size:12px;color:var(--muted)}
+  .btn{background:var(--accent);color:#032d24;border:none;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700}
+  .btn.secondary{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
+  footer{margin-top:18px;color:var(--muted);text-align:center;font-size:13px}
+  /* modal */
+  .backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,10,0.6);z-index:60}
+  .modal{width:min(760px,96%);background:var(--card);padding:16px;border-radius:12px;position:relative}
+  .close-x{position:absolute;right:14px;top:10px;cursor:pointer;color:var(--muted)}
+  .ad-area{min-height:110px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;border:1px dashed rgba(255,255,255,0.03);padding:12px;color:var(--muted)}
+  .countdown{font-weight:800;font-size:22px;margin-top:8px}
+  .script-box{margin-top:12px;background:#071018;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);max-height:360px;overflow:auto;white-space:pre-wrap}
+  .copy-row{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+  .hidden{display:none!important}
+  /* small popup */
+  .popup{position:fixed;right:18px;bottom:18px;width:300px;border-radius:10px;background:linear-gradient(180deg,#071220,#0b2735);padding:10px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none;z-index:70}
+  .ad-small{height:80px;border-radius:8px;border:1px dashed rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  @media (max-width:520px){.grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-  <div class="panel">
-    <h3>Hand → Green Screen</h3>
-    <p><small>Allow camera access. When a hand is detected it will be filled with green. Works locally in-browser.</small></p>
+<div class="wrap">
+  <header>
+    <h1>Roblox Scripts Gallery</h1>
+    <div style="font-size:13px;color:var(--muted)">Ad area placeholder — insert AdSense inside the modal ad container (see comments)</div>
+  </header>
 
-    <div>
-      <button id="startBtn">Start Camera</button>
-      <button id="stopBtn" disabled>Stop</button>
+  <section class="grid" id="gallery"></section>
+
+  <footer>
+    Template: Replace the ad placeholders with your own AdSense snippet. Do NOT instruct users to click ads. This template shows an ad area and a short wait before revealing content to be AdSense-friendly.
+  </footer>
+</div>
+
+<!-- Hidden raw JSON data (DO NOT render / not used for UI directly) -->
+<script id="raw-data" type="application/json">
+[
+  {
+    "script_name":"AutoJump",
+    "script_code":"-- AutoJump.lua\\nwhile wait() do\\n  local plr = game.Players.LocalPlayer\\n  if plr and plr.Character and plr.Character:FindFirstChild(\"Humanoid\") then\\n    plr.Character.Humanoid.Jump = true\\n  end\\nend",
+    "script_imagelink":"https://via.placeholder.com/600x400?text=AutoJump"
+  },
+  {
+    "script_name":"InfiniteJump",
+    "script_code":"-- InfiniteJump.lua\\nlocal hum = game.Players.LocalPlayer.Character:WaitForChild('Humanoid')\\nhum:GetPropertyChangedSignal('JumpPower'):Connect(function() end)\\n-- simple placeholder script",
+    "script_imagelink":"https://via.placeholder.com/600x400?text=InfiniteJump"
+  },
+  {
+    "script_name":"SpeedBoost",
+    "script_code":"-- SpeedBoost.lua\\nlocal plr = game.Players.LocalPlayer\\nif plr.Character and plr.Character:FindFirstChild('Humanoid') then\\n  plr.Character.Humanoid.WalkSpeed = 50\\nend",
+    "script_imagelink":"https://via.placeholder.com/600x400?text=SpeedBoost"
+  },
+  {
+    "script_name":"FlyToggle",
+    "script_code":"-- FlyToggle.lua\\n-- placeholder orthogonal fly script\\nprint('Fly toggled (placeholder)')",
+    "script_imagelink":"https://via.placeholder.com/600x400?text=FlyToggle"
+  },
+  {
+    "script_name":"ESP_Basic",
+    "script_code":"-- ESP_Basic.lua\\nfor i,v in pairs(game.Players:GetPlayers()) do\\n  if v.Character and v.Character:FindFirstChild('Head') then\\n    -- placeholder ESP\\n  end\\nend",
+    "script_imagelink":"https://via.placeholder.com/600x400?text=ESP"
+  },
+  {
+    "script_name":"AutoFarm",
+    "script_code":"-- AutoFarm.lua\\n-- placeholder auto farm code\\nprint('AutoFarm engaged')",
+    "script_imagelink":"https://via.placeholder.com/600x400?text=AutoFarm"
+  },
+  {
+    "script_name":"NoClip",
+    "script_code":"-- NoClip.lua\\n-- placeholder noclip\\nprint('NoClip active')",
+    "script_imagelink":"https://via.placeholder.com/600x400?text=NoClip"
+  }
+]
+</script>
+
+<!-- Gate modal (shows ad area + countdown) -->
+<div class="backdrop" id="gateModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <span class="close-x" onclick="closeGate()">✕</span>
+    <h2 id="modalTitle">Unlock script</h2>
+
+    <!-- AD PLACEHOLDER: Paste your AdSense code inside the #adContainer below.
+         IMPORTANT:
+         - Replace data-ad-client with your publisher id when deploying (example: ca-pub-YOURIDHERE).
+         - Do NOT add wording that asks users to click ads.
+         - This placeholder prevents any automatic clicking or encouragement to click.
+    -->
+    <div class="ad-area" id="adContainer">
+      <div style="text-align:center;">
+        <div style="font-weight:700;color:var(--muted)">Ad will appear here</div>
+        <div style="font-size:12px;color:var(--muted)">(Insert AdSense snippet into the HTML where directed)</div>
+        <!-- Example sanitized snippet (replace slot and publisher id in your deployed file):
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-YOURIDHERE"
+             data-ad-slot="1234567890"
+             data-ad-format="auto"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+        -->
+      </div>
     </div>
 
-    <label>Mask blur (smoothness): <span id="blurVal">8</span> px
-      <input id="blurRange" type="range" min="0" max="24" value="8" />
-    </label>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:12px;">
+      <div>
+        <div style="font-size:13px;color:var(--muted)">Waiting time</div>
+        <div class="countdown" id="countdown">3</div>
+      </div>
+      <div style="margin-left:auto">
+        <button class="btn secondary" onclick="closeGate()">Cancel</button>
+        <button class="btn" id="revealBtn" disabled onclick="revealScript()">Reveal</button>
+      </div>
+    </div>
 
-    <label>Mask radius multiplier: <span id="radVal">1.25</span>
-      <input id="radRange" type="range" min="0.6" max="2.0" step="0.05" value="1.25" />
-    </label>
+    <div class="script-box hidden" id="scriptBox">
+      <div style="font-weight:800" id="scriptName">Script name</div>
+      <pre id="scriptCode" style="margin-top:8px"></pre>
+      <div class="copy-row">
+        <button class="btn secondary" onclick="closeGate()">Close</button>
+        <button class="btn" id="copyBtn" onclick="copyScript()">Copy to clipboard</button>
+        <button class="btn" id="downloadBtn" onclick="downloadScript()">Download</button>
+      </div>
+    </div>
 
-    <p><small>Tip: point your hand clearly to the camera. Background must be reasonably lit.</small></p>
+    <div style="margin-top:10px;color:var(--muted);font-size:12px">
+      Note: This template displays an ad slot and a short wait before revealing the script. Do not ask users to click ads. Replace the placeholder with your AdSense code and follow Google policies.
+    </div>
   </div>
+</div>
 
-  <div class="panel">
-    <canvas id="outputCanvas" width="640" height="480"></canvas>
-    <video id="inputVideo" autoplay playsinline></video>
+<!-- small popup ad (non-invasive) -->
+<div class="popup" id="popupAd">
+  <div style="display:flex;gap:10px;align-items:center">
+    <div style="flex:1">
+      <div class="ad-small" id="popupAdInner">Popup ad area (replace with ad code if desired)</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">Sponsored</div>
+    </div>
+    <div style="margin-left:8px">
+      <button class="btn secondary" onclick="document.getElementById('popupAd').style.display='none'">Close</button>
+    </div>
   </div>
+</div>
 
-  <!-- MediaPipe Hands and utils -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script>
+/*
+  Behavior:
+  - Loads JSON from #raw-data (hidden).
+  - Renders cards for each script (name + thumbnail).
+  - When user clicks "Get", opens modal showing ad area and a 3-second countdown.
+  - After countdown ends, Reveal button enables; user clicks Reveal to see script.
+  - Copy & Download buttons only available after reveal.
+  - IMPORTANT: Do NOT instruct users to click ads. This flow shows an ad slot and waits 3s before revealing content.
+*/
 
-  <script>
-  // Elements
-  const video = document.getElementById('inputVideo');
-  const outCanvas = document.getElementById('outputCanvas');
-  const outCtx = outCanvas.getContext('2d');
+const rawJson = document.getElementById('raw-data').textContent;
+let scripts = [];
+try {
+  scripts = JSON.parse(rawJson);
+} catch(e) {
+  console.error('Invalid JSON in raw-data');
+}
 
-  // Offscreen canvases for mask + overlay
-  const maskCanvas = document.createElement('canvas');
-  maskCanvas.width = outCanvas.width; maskCanvas.height = outCanvas.height;
-  const maskCtx = maskCanvas.getContext('2d');
+const gallery = document.getElementById('gallery');
+scripts.forEach((s, idx) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.index = idx;
+  card.dataset.name = s.script_name || `Script ${idx+1}`;
+  card.dataset.code = s.script_code || '-- no code --';
+  const thumb = document.createElement('div');
+  thumb.className = 'thumb';
+  thumb.style.backgroundImage = `url('${s.script_imagelink || 'https://via.placeholder.com/600x400?text=Script'}')`;
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  meta.innerHTML = `<div><div class="title">${escapeHtml(s.script_name)}</div><div class="desc">Click to unlock</div></div>
+                    <div><button class="btn" onclick="openGate(${idx})">Get</button></div>`;
+  card.appendChild(thumb);
+  card.appendChild(meta);
+  gallery.appendChild(card);
+});
 
-  const overlayCanvas = document.createElement('canvas');
-  overlayCanvas.width = outCanvas.width; overlayCanvas.height = outCanvas.height;
-  const overlayCtx = overlayCanvas.getContext('2d');
+let currentIndex = null;
+let countdownTimer = null;
+function openGate(idx) {
+  currentIndex = idx;
+  const title = scripts[idx].script_name || 'Script';
+  document.getElementById('modalTitle').innerText = `Unlock: ${title}`;
+  document.getElementById('countdown').innerText = '3';
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('scriptBox').classList.add('hidden');
+  document.getElementById('gateModal').style.display = 'flex';
+  startCountdown(3);
+}
 
-  // Controls
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  const blurRange = document.getElementById('blurRange');
-  const radRange = document.getElementById('radRange');
-  const blurVal = document.getElementById('blurVal');
-  const radVal = document.getElementById('radVal');
+function closeGate() {
+  document.getElementById('gateModal').style.display = 'none';
+  clearInterval(countdownTimer);
+  currentIndex = null;
+}
 
-  blurRange.oninput = () => blurVal.textContent = blurRange.value;
-  radRange.oninput = () => radVal.textContent = radRange.value;
-
-  let camera = null;
-  let running = false;
-
-  // Create MediaPipe Hands
-  const hands = new Hands({
-    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-  });
-
-  hands.setOptions({
-    maxNumHands: 2,
-    modelComplexity: 1,
-    minDetectionConfidence: 0.6,
-    minTrackingConfidence: 0.6
-  });
-
-  hands.onResults(onHandsResults);
-
-  async function startCamera() {
-    if (running) return;
-    running = true;
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-
-    // request camera with ideal resolution matching canvas
-    camera = new Camera(video, {
-      onFrame: async () => {
-        await hands.send({image: video});
-      },
-      width: outCanvas.width,
-      height: outCanvas.height,
-      facingMode: "user"
-    });
-    camera.start();
-  }
-
-  function stopCamera() {
-    if (!running) return;
-    running = false;
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    if (camera) camera.stop();
-    // clear canvas
-    outCtx.clearRect(0,0,outCanvas.width,outCanvas.height);
-    maskCtx.clearRect(0,0,maskCanvas.width,maskCanvas.height);
-    overlayCtx.clearRect(0,0,overlayCanvas.width,overlayCanvas.height);
-  }
-
-  startBtn.addEventListener('click', startCamera);
-  stopBtn.addEventListener('click', stopCamera);
-
-  // When hands model returns results
-  function onHandsResults(results) {
-    // draw original video frame to output
-    outCtx.save();
-    outCtx.clearRect(0,0,outCanvas.width,outCanvas.height);
-    outCtx.drawImage(video, 0, 0, outCanvas.width, outCanvas.height);
-    outCtx.restore();
-
-    // Clear mask
-    maskCtx.clearRect(0,0,maskCanvas.width,maskCanvas.height);
-    maskCtx.fillStyle = 'white';
-    maskCtx.globalCompositeOperation = 'source-over';
-
-    // For each detected hand, draw soft blobs at landmarks to create a mask
-    (results.multiHandLandmarks || []).forEach(landmarks => {
-      // compute approximate hand size from bbox of landmarks
-      let minX=1,minY=1,maxX=0,maxY=0;
-      landmarks.forEach(p => {
-        if (p.x < minX) minX = p.x;
-        if (p.y < minY) minY = p.y;
-        if (p.x > maxX) maxX = p.x;
-        if (p.y > maxY) maxY = p.y;
-      });
-      const bboxW = (maxX - minX) * maskCanvas.width;
-      const bboxH = (maxY - minY) * maskCanvas.height;
-      const baseRadius = Math.max(bboxW, bboxH) * 0.06 * parseFloat(radRange.value); // tweakable
-
-      // Draw filled circles at each landmark (this forms a rough mask)
-      landmarks.forEach(p => {
-        const x = p.x * maskCanvas.width;
-        const y = p.y * maskCanvas.height;
-        // radius slightly varies by landmark index for a more natural shape
-        const r = baseRadius * (0.75 + (Math.sin(p.z*10 || 0) + 1)/4);
-        maskCtx.beginPath();
-        maskCtx.arc(x, y, r, 0, Math.PI * 2);
-        maskCtx.fill();
-      });
-
-      // fill convex-like hull by connecting outer landmarks (wrist + finger tips)
-      // use a simple polygon roughly around the hand: choose landmarks indices known to be outer points
-      const polyIndices = [0,5,9,13,17,20,16,12,8,4]; // a reasonable hand loop
-      maskCtx.beginPath();
-      for (let i=0;i<polyIndices.length;i++){
-        const idx = polyIndices[i];
-        const p = landmarks[idx];
-        const x = p.x * maskCanvas.width;
-        const y = p.y * maskCanvas.height;
-        if (i===0) maskCtx.moveTo(x,y); else maskCtx.lineTo(x,y);
-      }
-      maskCtx.closePath();
-      maskCtx.fill();
-    });
-
-    // apply blur to mask to smooth edges (via CSS filter on the offscreen canvas)
-    // We emulate blur by drawing mask to overlay with filter, because canvas blur requires ctx.filter
-    overlayCtx.clearRect(0,0,overlayCanvas.width,overlayCanvas.height);
-    overlayCtx.save();
-    overlayCtx.filter = `blur(${blurRange.value}px)`;
-    overlayCtx.drawImage(maskCanvas, 0, 0);
-    overlayCtx.restore();
-
-    // Create green overlay constrained to mask
-    // 1) Make overlay full-green
-    overlayCtx.save();
-    overlayCtx.globalCompositeOperation = 'source-over';
-    overlayCtx.fillStyle = 'rgba(0,200,0,1)'; // bright green
-    overlayCtx.fillRect(0,0,overlayCanvas.width,overlayCanvas.height);
-
-    // 2) Keep green only where mask exists: destination-in with the blurred mask
-    overlayCtx.globalCompositeOperation = 'destination-in';
-    overlayCtx.drawImage(maskCanvas, 0, 0); // using non-blurred mask keeps sharper interior; feel free to use overlayCanvas instead
-    overlayCtx.restore();
-
-    // Finally, draw the green overlay on top of the original video
-    outCtx.drawImage(overlayCanvas, 0, 0);
-  }
-
-  // Stop camera when page hidden to save resources
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      if (camera) camera.stop();
+function startCountdown(seconds){
+  let s = seconds;
+  const display = document.getElementById('countdown');
+  display.innerText = s;
+  clearInterval(countdownTimer);
+  countdownTimer = setInterval(()=>{
+    s--;
+    if(s <= 0){
+      clearInterval(countdownTimer);
+      display.innerText = '0';
+      document.getElementById('revealBtn').disabled = false;
     } else {
-      // if previously running, restart camera
-      if (running && camera) camera.start();
+      display.innerText = s;
     }
-  });
-  </script>
+  }, 1000);
+}
+
+function revealScript(){
+  if(currentIndex === null) return;
+  document.getElementById('revealBtn').disabled = true;
+  const data = scripts[currentIndex];
+  document.getElementById('scriptName').innerText = data.script_name || 'Script';
+  document.getElementById('scriptCode').innerText = data.script_code || '-- no code --';
+  document.getElementById('scriptBox').classList.remove('hidden');
+
+  // enable copy/download buttons
+  document.getElementById('copyBtn').disabled = false;
+  document.getElementById('downloadBtn').disabled = false;
+}
+
+function copyScript(){
+  const code = document.getElementById('scriptCode').innerText;
+  navigator.clipboard.writeText(code).then(()=> {
+    alert('Script copied to clipboard');
+  }, ()=> alert('Unable to copy'));
+}
+
+function downloadScript(){
+  const code = document.getElementById('scriptCode').innerText;
+  const name = (document.getElementById('scriptName').innerText || 'script').replace(/\s+/g,'_') + '.lua';
+  const blob = new Blob([code], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// Random popup ad (non-invasive)
+(function randomPopup(){
+  const min = 25; const max = 65;
+  function schedule(){
+    const t = Math.floor(Math.random() * (max - min + 1)) + min;
+    setTimeout(()=>{ showPopupAd(); schedule(); }, t * 1000);
+  }
+  function showPopupAd(){
+    const el = document.getElementById('popupAd');
+    el.style.display = 'block';
+    setTimeout(()=>{ el.style.display='none'; }, 12 * 1000);
+  }
+  schedule();
+})();
+
+// Utility escape
+function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
+// Close modal on Escape
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeGate(); document.getElementById('popupAd').style.display='none'; }});
+</script>
 </body>
 </html>
